@@ -36,7 +36,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 EXTERNAL_APPS = [
-    # 'auth'
+    'auth'
 ]
 
 INSTALLED_APPS = [
