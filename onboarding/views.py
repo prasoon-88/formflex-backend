@@ -1,7 +1,7 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.contrib.auth.models import User
-from django.contrib.auth import login,logout,authenticate
+from django.contrib.auth import login,logout
 from rest_framework_simplejwt.tokens import RefreshToken
 import json
 from .utils import check_user
@@ -78,5 +78,25 @@ def user_login(req):
 
 @csrf_exempt
 def user_logout(req):
-    print('logout')
-    pass
+    if req.method == "POST":
+        if req.user.is_authenticated:
+            logout(request=req)
+
+            try:
+                auth_header = req.headers.get('Authorization')
+                if auth_header:
+                    refresh_token = auth_header.split()[1]
+                    token = RefreshToken(refresh_token)
+                    token.blacklist()
+            except:
+                print('Error during token blacklisting while logout')
+
+            return JsonResponse({
+                "message":"success"
+            },status=200)
+        return JsonResponse({
+                "message":"user is not logged in"
+            },status=400)
+    return JsonResponse({
+        "message":"method not allowed"
+    },status=405)
