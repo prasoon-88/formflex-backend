@@ -2,6 +2,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import login,logout,authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
 import json
 from .utils import check_user
 
@@ -19,7 +20,9 @@ def user_signup(req):
                     'message':'user already registered',
                 },status=400)
 
-            user = User.objects.create(username=username,password=password,email=email)
+            user = User.objects.create(username=username,email=email)
+            user.set_password(password)
+            user.save()
 
             if user:
                 return JsonResponse({
@@ -40,8 +43,38 @@ def user_signup(req):
 
 @csrf_exempt
 def user_login(req):
-    print('login')
-    pass
+    if req.method == 'POST':
+        body = json.loads(req.body)
+        email = body.get('email',None)
+        password = body.get('password',None)
+
+        if email and password:
+            try:
+                user = User.objects.get(email=email)
+                if user is None or user.check_password(password) is None:
+                    return JsonResponse({
+                        "message":"email or password is invalid"
+                    },status=400)
+
+            except User.DoesNotExist:
+                return JsonResponse({
+                        "message":"user does not exists"
+                    },status=400)
+
+            login(request=req,user=user)
+            refresh_token = RefreshToken.for_user(user)
+            return JsonResponse({
+                        "message":"success",
+                        "refreshToken":str(refresh_token),
+                        "accessToken":str(refresh_token.access_token)
+                    },status=200)
+            
+        return JsonResponse({
+                "message":"email and password is mandatory"
+            },status=400)
+    return JsonResponse({
+        "message":"method not allowed"
+    },status=405)
 
 @csrf_exempt
 def user_logout(req):
