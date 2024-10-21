@@ -38,6 +38,7 @@ ALLOWED_HOSTS = []
 
 EXTERNAL_APPS = [
     'onboarding'
+    'formhandler'
 ]
 
 INSTALLED_APPS = [
