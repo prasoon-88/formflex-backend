@@ -37,7 +37,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 EXTERNAL_APPS = [
-    'onboarding'
+    'onboarding',
     'formhandler'
 ]
 
