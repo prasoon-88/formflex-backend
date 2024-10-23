@@ -2,9 +2,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import login,logout
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken,AccessToken
 import json
-from .utils import check_user
+from .utils import check_user,retrieve_token
 
 @csrf_exempt
 def user_signup(req):
@@ -77,15 +77,37 @@ def user_login(req):
     },status=405)
 
 @csrf_exempt
+def verify_user(req):
+    if req.method == 'POST':
+        token = retrieve_token(req)
+        print(token)
+        try:
+            access_token_obj = AccessToken(token)
+            print(access_token_obj)
+            user_id = access_token_obj['user_id']
+            user = User.objects.get(id=user_id)
+            if user:
+                user_obj = {
+                    'email':user.email,
+                    # 'name':user.get_full_name,
+                    'username':user.username,
+                }
+                return JsonResponse(user_obj,status=200)
+        except:
+            return JsonResponse({
+                    "message":"something went wrong"
+                },status=500)
+    return JsonResponse({
+        "message":"method not allowed"
+    },status=405)
+
+@csrf_exempt
 def user_logout(req):
     if req.method == "POST":
         if req.user.is_authenticated:
             logout(request=req)
-
             try:
-                auth_header = req.headers.get('Authorization')
-                if auth_header:
-                    refresh_token = auth_header.split()[1]
+                    refresh_token = retrieve_token(req)
                     token = RefreshToken(refresh_token)
                     token.blacklist()
             except:
