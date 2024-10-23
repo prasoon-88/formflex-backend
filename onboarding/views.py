@@ -78,25 +78,21 @@ def user_login(req):
 
 @csrf_exempt
 def verify_user(req):
-    if req.method == 'POST':
-        token = retrieve_token(req)
-        print(token)
+    if req.method == 'GET':
+        token = retrieve_token(req) 
         try:
             access_token_obj = AccessToken(token)
-            print(access_token_obj)
             user_id = access_token_obj['user_id']
             user = User.objects.get(id=user_id)
             if user:
-                user_obj = {
-                    'email':user.email,
-                    # 'name':user.get_full_name,
-                    'username':user.username,
-                }
-                return JsonResponse(user_obj,status=200)
+                return JsonResponse({"message":'done'},status=200)
         except:
             return JsonResponse({
                     "message":"something went wrong"
                 },status=500)
+        return JsonResponse({
+                    "message":"unauthorized"
+                },status=401)
     return JsonResponse({
         "message":"method not allowed"
     },status=405)
@@ -107,12 +103,11 @@ def user_logout(req):
         if req.user.is_authenticated:
             logout(request=req)
             try:
-                    refresh_token = retrieve_token(req)
-                    token = RefreshToken(refresh_token)
-                    token.blacklist()
+                refresh_token = retrieve_token(req)
+                token = RefreshToken(refresh_token)
+                token.blacklist()
             except:
                 print('Error during token blacklisting while logout')
-
             return JsonResponse({
                 "message":"success"
             },status=200)
