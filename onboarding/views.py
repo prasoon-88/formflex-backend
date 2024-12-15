@@ -63,6 +63,7 @@ def user_login(req):
 
             login(request=req,user=user)
             refresh_token = RefreshToken.for_user(user)
+            
             return JsonResponse({
                         "message":"success",
                         "refreshToken":str(refresh_token),
